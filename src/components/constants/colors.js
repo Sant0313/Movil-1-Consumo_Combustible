@@ -1,24 +1,24 @@
 export default {
-    principal: '#2d0af5',
-    variante1: '#4d36ce',
-    variante2: '#4d36ce',
-    variante3: '#4837a8',
-    variante4: '#130080',
-    variante5: '#0a004d',
+    principal: '#ffffff',
+    variante1: '#875ef8',
+    variante2: '#e65ef8',
+    variante3: '#b8b51c',
+    variante4: '#69cc8a',
+    variante5: '#62b3a5',
 
     //colores para texto y las interfaces
     defecto: '#faf7f7',
-    subtitle: '#cccccc',
+    subtitle: '#945555',
     thin: '#e0e0e0',
     delicate: '#c0c0c0',
     lumunate: '#f0f0f0',
     dark: '#000000',
-    iluminado: '#ffffff',
-    suave: '#b3b3b3',
+    iluminado: '#181818',
+    suave: '#000000',
 
     //colores para fondos
     fondoclaro: '#f5f5f5',
-    fondoscuro: '#1a1a1a',
+    fondoscuro: '#414141',
 
     //colores para alerta y acciones
     alerta: '#ff4d4d',
@@ -27,8 +27,8 @@ export default {
     information: '#4d94ff',
 
     //gradtentes
-    gradiente1: ['#2d0af5', '#4d36ce'],
-    gradiente2: ['#4d36ce', '#4837a8'],
-    gradiente3: ['#4837a8', '#130080'],
-    gradientePrimario: ['#2d0af5', '#4d36ce']
+    gradiente1: ['#a52b2b', '#8a4848'],
+    gradiente2: ['#b31d1d', '#a34444'],
+    gradiente3: ['#eb0707', '#882c2c'],
+    gradientePrimario: ['#ffffff', '#4072dd']
 };
