@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getFuelRecords, getRoutesRecords, clearAllLocalData } from '../../../services/databaseService';
 import { useTheme } from '../../context/ThemeContext';
 
 const ReportsScreen = ({ navigation }) => {
@@ -22,29 +22,22 @@ const ReportsScreen = ({ navigation }) => {
 
     const loadMetrics = async () => {
         try {
-            const fuelData = await AsyncStorage.getItem('@fuel_history');
-            const routesData = await AsyncStorage.getItem('@routes_history');
+            const fuelData = await getFuelRecords();
+            const routesData = await getRoutesRecords();
 
             let cost = 0;
             let volume = 0;
             let distance = 0;
-            let trips = 0;
+            let trips = routesData.length;
 
-            if (fuelData) {
-                const parsedFuel = JSON.parse(fuelData);
-                parsedFuel.forEach(item => {
-                    cost += parseFloat(item.valor) || 0;
-                    volume += parseFloat(item.cantidad) || 0;
-                });
-            }
+            fuelData.forEach(item => {
+                cost += parseFloat(item.valor) || 0;
+                volume += parseFloat(item.cantidad) || 0;
+            });
 
-            if (routesData) {
-                const parsedRoutes = JSON.parse(routesData);
-                trips = parsedRoutes.length;
-                parsedRoutes.forEach(item => {
-                    distance += parseFloat(item.distancia) || 0;
-                });
-            }
+            routesData.forEach(item => {
+                distance += parseFloat(item.distancia) || 0;
+            });
 
             setMetrics({
                 totalFuelCost: cost,
@@ -74,8 +67,7 @@ const ReportsScreen = ({ navigation }) => {
                     text: "Sí, borrar", 
                     style: "destructive",
                     onPress: async () => {
-                        await AsyncStorage.removeItem('@fuel_history');
-                        await AsyncStorage.removeItem('@routes_history');
+                        await clearAllLocalData();
                         loadMetrics();
                     }
                 }

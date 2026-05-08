@@ -1,18 +1,56 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Image, Platform, Alert } from "react-native";
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, SafeAreaView, TouchableOpacity, Image, Platform, Alert, Modal, TextInput } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { updateProfile } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../context/ThemeContext';
-import { auth } from '../../../services/firebaseService';
+import { auth, db } from '../../../services/firebaseService';
 
 const UserScreen = () => {
     const navigation = useNavigation();
     const currentUser = auth?.currentUser;
     const [photo, setPhoto] = useState(currentUser?.photoURL || null);
+    const [mainVehicle, setMainVehicle] = useState('Camioneta');
+    const [isEditingVehicle, setIsEditingVehicle] = useState(false);
+    const [newVehicleName, setNewVehicleName] = useState('');
     const { colors } = useTheme();
     const styles = getStyles(colors);
+
+    useEffect(() => {
+        loadProfile();
+    }, []);
+
+    const loadProfile = async () => {
+        if (!currentUser) return;
+        try {
+            const docRef = doc(db, 'users', currentUser.uid, 'profile', 'info');
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                if (data.mainVehicle) {
+                    setMainVehicle(data.mainVehicle);
+                }
+            }
+        } catch (error) {
+            console.log("Error loading profile:", error);
+        }
+    };
+
+    const handleSaveVehicle = async () => {
+        if (!currentUser) return;
+        try {
+            const docRef = doc(db, 'users', currentUser.uid, 'profile', 'info');
+            await setDoc(docRef, { mainVehicle: newVehicleName }, { merge: true });
+            setMainVehicle(newVehicleName);
+            setIsEditingVehicle(false);
+            Alert.alert('Éxito', 'Vehículo actualizado correctamente.');
+        } catch (error) {
+            console.log("Error saving profile:", error);
+            Alert.alert('Error', 'No se pudo actualizar el vehículo.');
+        }
+    };
 
     const handleImagePick = async () => {
         try {
@@ -77,10 +115,11 @@ const UserScreen = () => {
                     <Text style={styles.userEmail}>{currentUser?.email || 'mi-correo@ejemplo.com'}</Text>
 
                     <View style={styles.statsRow}>
-                        <View style={styles.statItem}>
-                            <Text style={styles.statNumber}>Camioneta</Text>
+                        <TouchableOpacity style={styles.statItem} onPress={() => { setNewVehicleName(mainVehicle); setIsEditingVehicle(true); }}>
+                            <Text style={styles.statNumber}>{mainVehicle}</Text>
                             <Text style={styles.statLabel}>Vehículo Principal</Text>
-                        </View>
+                            <Ionicons name="pencil" size={12} color={colors.delicate} style={{marginTop: 2}} />
+                        </TouchableOpacity>
                         <View style={styles.statDivider} />
                         <View style={styles.statItem}>
                             <Text style={styles.statNumber}>1 Años</Text>
@@ -114,6 +153,28 @@ const UserScreen = () => {
 
                 <Text style={styles.appVersion}>App Movilidad v1.0.0</Text>
             </ScrollView>
+
+            <Modal visible={isEditingVehicle} transparent animationType="slide">
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Editar Vehículo Principal</Text>
+                        <TextInput
+                            style={styles.modalInput}
+                            value={newVehicleName}
+                            onChangeText={setNewVehicleName}
+                            placeholder="Ej: Moto, Auto, Camioneta"
+                        />
+                        <View style={styles.modalButtons}>
+                            <TouchableOpacity style={styles.modalButtonCancel} onPress={() => setIsEditingVehicle(false)}>
+                                <Text style={styles.modalButtonTextCancel}>Cancelar</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.modalButtonSave} onPress={handleSaveVehicle}>
+                                <Text style={styles.modalButtonTextSave}>Guardar</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 };
@@ -279,6 +340,63 @@ const getStyles = (colors) => StyleSheet.create({
         color: colors.delicate,
         fontSize: 12,
         marginTop: 10,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        width: '80%',
+        backgroundColor: colors.principal,
+        borderRadius: 15,
+        padding: 20,
+        alignItems: 'center',
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: colors.dark,
+        marginBottom: 15,
+    },
+    modalInput: {
+        width: '100%',
+        borderWidth: 1,
+        borderColor: colors.thin,
+        borderRadius: 10,
+        padding: 12,
+        fontSize: 16,
+        color: colors.dark,
+        marginBottom: 20,
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+    },
+    modalButtonCancel: {
+        flex: 1,
+        padding: 12,
+        alignItems: 'center',
+        backgroundColor: colors.fondoclaro,
+        borderRadius: 10,
+        marginRight: 10,
+    },
+    modalButtonSave: {
+        flex: 1,
+        padding: 12,
+        alignItems: 'center',
+        backgroundColor: colors.variante1,
+        borderRadius: 10,
+    },
+    modalButtonTextCancel: {
+        color: colors.dark,
+        fontWeight: 'bold',
+    },
+    modalButtonTextSave: {
+        color: colors.principal,
+        fontWeight: 'bold',
     }
 });
 

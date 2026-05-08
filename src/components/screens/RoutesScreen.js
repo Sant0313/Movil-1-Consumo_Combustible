@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { addRouteRecord, getRoutesRecords } from '../../../services/databaseService';
 import { useTheme } from '../../context/ThemeContext';
-
 const RoutesScreen = ({ navigation }) => {
     const { colors } = useTheme();
     const styles = getStyles(colors);
@@ -21,10 +20,8 @@ const RoutesScreen = ({ navigation }) => {
 
     const loadHistory = async () => {
         try {
-            const data = await AsyncStorage.getItem('@routes_history');
-            if (data !== null) {
-                setHistory(JSON.parse(data));
-            }
+            const data = await getRoutesRecords();
+            setHistory(data);
         } catch (error) {
             console.log("Error loading routes history", error);
         }
@@ -45,11 +42,10 @@ const RoutesScreen = ({ navigation }) => {
             fecha
         };
 
-        const updatedHistory = [newEntry, ...history];
-        
         try {
-            await AsyncStorage.setItem('@routes_history', JSON.stringify(updatedHistory));
-            setHistory(updatedHistory);
+            await addRouteRecord(newEntry);
+            const data = await getRoutesRecords();
+            setHistory(data);
             setOrigen('');
             setDestino('');
             setDistancia('');

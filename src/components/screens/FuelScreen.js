@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { addFuelRecord, getFuelRecords } from '../../../services/databaseService';
 import { useTheme } from '../../context/ThemeContext';
-
 const FuelScreen = ({ navigation }) => {
     const { colors } = useTheme();
     const styles = getStyles(colors);
@@ -20,10 +19,8 @@ const FuelScreen = ({ navigation }) => {
 
     const loadHistory = async () => {
         try {
-            const data = await AsyncStorage.getItem('@fuel_history');
-            if (data !== null) {
-                setHistory(JSON.parse(data));
-            }
+            const data = await getFuelRecords();
+            setHistory(data);
         } catch (error) {
             console.log("Error loading history", error);
         }
@@ -43,11 +40,10 @@ const FuelScreen = ({ navigation }) => {
             fecha
         };
 
-        const updatedHistory = [newEntry, ...history];
-        
         try {
-            await AsyncStorage.setItem('@fuel_history', JSON.stringify(updatedHistory));
-            setHistory(updatedHistory);
+            await addFuelRecord(newEntry);
+            const data = await getFuelRecords();
+            setHistory(data);
             setKilometraje('');
             setCantidad('');
             setValor('');
